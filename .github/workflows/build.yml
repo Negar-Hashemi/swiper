@@ -1,20 +1,39 @@
-name: Build
+name: Test on Multiple OS
+
 on:
   push:
-    branches: [master, Swiper6, Swiper7, Swiper8]
+    branches:
+      - master
   pull_request:
-    branches: [master, Swiper6, Swiper7, Swiper8]
+    branches:
+      - master
+
 jobs:
-  test:
-    runs-on: ubuntu-latest
+  build:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest] # Operating systems to test
+        node-version: [18, 20, 22]                      # Node.js versions to test
+        attempt: [1, 2, 3, 4, 5]                        # Repeat tests 5 times
+
     steps:
-      - name: Checkout the repository
-        uses: actions/checkout@v2
-      - name: Install Node.js
-        uses: actions/setup-node@v2
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
         with:
-          node-version: 18
+          node-version: ${{ matrix.node-version }}
+
       - name: Install dependencies
         run: npm install
-      - name: Run build
-        run: npm run build:prod
+
+      - name: Testing on OS (${{ matrix.os }}) with Node.js (version ${{ matrix.node-version }}) attempt ${{ matrix.attempt }}
+        run: |
+          echo "Run attempt: ${{ matrix.attempt }}"
+          npm test
+
+    continue-on-error: false
